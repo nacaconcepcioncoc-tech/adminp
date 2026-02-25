@@ -1,0 +1,553 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KRES Admin - Inventory</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'DM Sans',sans-serif; background:#f5f5f5; display:flex; min-height:100vh; }
+        .sidebar { width:310px; background:linear-gradient(180deg,#4a6a82,#3d5773); color:white; display:flex; flex-direction:column; position:fixed; height:100vh; }
+        .logo-section { display:flex; align-items:center; padding:25px 20px; gap:18px; border-bottom:1px solid rgba(255,255,255,.15); }
+        .logo { flex-shrink:0; width:55px; height:55px; border-radius:50%; background:rgba(255,255,255,.95); display:flex; align-items:center; justify-content:center; }
+        .logo img { width:50px; height:50px; border-radius:50%; object-fit:contain; padding:5px; }
+        .logo-text h1 { font-size:20px; font-weight:700; letter-spacing:.5px; }
+        .logo-text p { font-size:12px; color:#d0dce8; }
+        .nav-menu { flex:1; padding:10px; overflow-y:auto; margin-top:40px; }
+        .nav-item { display:flex; align-items:center; gap:15px; padding:15px 20px; color:#b8c9d9; text-decoration:none; border-radius:8px; margin-bottom:5px; transition:all .3s; font-size:15px; }
+        .nav-item:hover { background:rgba(255,255,255,.1); color:white; }
+        .nav-item.active { background:white; color:#2c4456; }
+        .nav-item svg { width:24px; height:24px; flex-shrink:0; }
+        .user-profile { display:flex; align-items:center; gap:12px; padding:20px; border-top:1px solid rgba(255,255,255,.1); margin-top:auto; }
+        .avatar { width:42px; height:42px; background:#5d7a8f; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:600; }
+        .user-name { font-size:14px; font-weight:600; flex:1; }
+        .logout-icon { width:24px; height:24px; color:#b8c9d9; cursor:pointer; transition:color .3s; }
+        .logout-icon:hover { color:white; }
+        .main-content { margin-left:310px; flex:1; background:#f5f5f5; min-height:100vh; }
+        .header { background:white; padding:25px 35px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+        .header-left { display:flex; align-items:center; gap:15px; }
+        .header-left svg { width:24px; height:24px; color:#333; }
+        .header h2 { font-size:28px; font-weight:600; color:#1a1a1a; }
+        .notification-icon { position:relative; cursor:pointer; padding:8px; }
+        .notification-icon svg { width:28px; height:28px; color:#1a1a1a; }
+        .notification-badge { position:absolute; top:2px; right:2px; background:#ef4444; color:white; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; }
+        .notification-dropdown { position:absolute; top:60px; right:20px; background:white; border:1px solid #e0e0e0; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,.1); width:300px; max-height:400px; overflow-y:auto; z-index:1000; display:none; }
+        .notification-dropdown.show { display:block; }
+        .notification-header { padding:15px; border-bottom:1px solid #e0e0e0; font-weight:600; color:#1a1a1a; }
+        .notification-item { padding:12px 15px; border-bottom:1px solid #f0f0f0; cursor:pointer; }
+        .notification-item:hover { background:#f5f5f5; }
+        .notification-item-title { font-weight:600; color:#1a1a1a; margin-bottom:4px; }
+        .notification-item-text { font-size:12px; color:#666; }
+        .notification-footer { padding:10px 15px; text-align:center; border-top:1px solid #e0e0e0; color:#3d5a73; font-size:13px; font-weight:600; }
+        .page-content { padding:30px 35px; }
+        .toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; gap:12px; flex-wrap:wrap; }
+        .toolbar-left { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+        .search-wrap { position:relative; }
+        .search-wrap svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:#9ca3af; pointer-events:none; }
+        .search-wrap input { padding:10px 12px 10px 36px; border:2px solid #e5e7eb; border-radius:9px; font-size:14px; font-family:inherit; color:#374151; background:white; width:260px; }
+        .search-wrap input:focus { outline:none; border-color:#3d5a73; }
+        .filter-select { padding:10px 14px; border:2px solid #e5e7eb; border-radius:9px; font-size:14px; font-family:inherit; background:white; color:#374151; cursor:pointer; }
+        .filter-select:focus { outline:none; border-color:#3d5a73; }
+        /* Stock update bar */
+        .stock-update-bar { background:white; border-radius:12px; padding:20px 24px; box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:22px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+        .stock-update-bar label { font-size:13px; font-weight:600; color:#374151; white-space:nowrap; }
+        .stock-select { padding:9px 14px; border:2px solid #e5e7eb; border-radius:9px; font-size:13px; font-family:inherit; color:#374151; background:white; flex:1; min-width:200px; max-width:320px; }
+        .stock-select:focus { outline:none; border-color:#3d5a73; }
+        .stock-input { padding:9px 14px; border:2px solid #e5e7eb; border-radius:9px; font-size:13px; font-family:inherit; color:#374151; background:white; width:110px; }
+        .stock-input:focus { outline:none; border-color:#3d5a73; }
+        .btn-update-stock { padding:9px 20px; background:#3d5a73; color:white; border:none; border-radius:9px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:all .2s; white-space:nowrap; }
+        .btn-update-stock:hover { background:#2c4456; }
+        /* Table */
+        .table-container { background:white; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); overflow:hidden; }
+        table { width:100%; border-collapse:collapse; }
+        thead { background:#f9fafb; }
+        th { padding:16px 18px; text-align:left; font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:.5px; border-bottom:2px solid #e5e7eb; }
+        td { padding:16px 18px; font-size:14px; color:#374151; border-bottom:1px solid #f3f4f6; vertical-align:middle; }
+        tbody tr:hover { background:#f9fafb; }
+        tbody tr:last-child td { border-bottom:none; }
+        .stock-badge { display:inline-block; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+        .st-in { background:#d1fae5; color:#059669; }
+        .st-low { background:#fef3c7; color:#d97706; }
+        .st-out { background:#fee2e2; color:#dc2626; }
+        /* Action buttons */
+        .action-cell { display:flex; gap:8px; align-items:center; }
+        .btn-edit { background:#f0f4f8; color:#3d5a73; border:1.5px solid #d0dce8; padding:6px 14px; border-radius:7px; font-size:12.5px; font-weight:600; cursor:pointer; transition:all .2s; font-family:inherit; }
+        .btn-edit:hover { background:#3d5a73; color:white; border-color:#3d5a73; }
+        .btn-delete { background:#fef2f2; color:#dc2626; border:1.5px solid #fecaca; padding:6px 14px; border-radius:7px; font-size:12.5px; font-weight:600; cursor:pointer; transition:all .2s; font-family:inherit; }
+        .btn-delete:hover { background:#dc2626; color:white; border-color:#dc2626; }
+        .btn-add { background:#3d5a73; color:white; border:none; padding:10px 22px; border-radius:9px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit; transition:all .2s; display:flex; align-items:center; gap:7px; }
+        .btn-add:hover { background:#2c4456; transform:translateY(-1px); }
+        /* Modal */
+        .modal { display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(10,16,26,.6); backdrop-filter:blur(4px); align-items:center; justify-content:center; }
+        .modal.show { display:flex; }
+        .modal-shell { background:white; border-radius:16px; width:90%; max-width:520px; overflow:hidden; box-shadow:0 24px 60px rgba(0,0,0,.25); animation:slideUp .3s cubic-bezier(.34,1.56,.64,1); max-height:90vh; overflow-y:auto; }
+        @keyframes slideUp { from{opacity:0;transform:translateY(20px) scale(.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+        .modal-top { background:linear-gradient(135deg,#2c4456,#3d6680); padding:22px 26px; display:flex; align-items:center; justify-content:space-between; }
+        .modal-title { font-family:'DM Serif Display',serif; font-size:19px; color:white; }
+        .modal-sub { font-size:11px; color:rgba(255,255,255,.6); margin-top:2px; }
+        .close-btn { width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); color:white; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+        .close-btn:hover { background:rgba(255,255,255,.25); transform:rotate(90deg); }
+        .modal-body { padding:22px 26px; }
+        .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+        .span-2 { grid-column:span 2; }
+        .field { display:flex; flex-direction:column; gap:5px; }
+        .field label { font-size:11.5px; font-weight:600; color:#374151; }
+        .field input, .field select, .field textarea { width:100%; padding:9px 12px; background:white; border:1.5px solid #e5e7eb; border-radius:9px; font-size:13px; font-family:inherit; color:#1f2937; transition:all .2s; outline:none; }
+        .field input:focus, .field select:focus { border-color:#3d6680; box-shadow:0 0 0 3px rgba(61,102,128,.1); }
+        .modal-footer { padding:14px 26px 22px; background:#fafafa; border-top:1px solid #f0f0f0; display:flex; justify-content:flex-end; gap:9px; }
+        .btn-ghost { background:transparent; color:#6b7280; border:1.5px solid #e5e7eb; padding:9px 20px; border-radius:9px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }
+        .btn-primary { background:linear-gradient(135deg,#2c4456,#3d6680); color:white; border:none; padding:9px 20px; border-radius:9px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; box-shadow:0 4px 12px rgba(44,68,86,.25); }
+        .btn-primary:hover { transform:translateY(-1px); }
+        .error-banner { display:none; background:#fef2f2; border:1.5px solid #fecaca; border-radius:8px; padding:9px 13px; font-size:12.5px; font-weight:500; color:#dc2626; margin-bottom:14px; }
+        .error-banner.show { display:block; }
+        .success-toast { position:fixed; bottom:24px; right:24px; background:#059669; color:white; padding:12px 20px; border-radius:10px; font-size:14px; font-weight:600; box-shadow:0 4px 12px rgba(0,0,0,.2); z-index:9999; display:none; }
+        .success-toast.show { display:block; }
+        .confirm-modal { display:none; position:fixed; z-index:3000; left:0; top:0; width:100%; height:100%; background:rgba(10,16,26,.6); align-items:center; justify-content:center; }
+        .confirm-modal.show { display:flex; }
+        .confirm-shell { background:white; border-radius:16px; width:90%; max-width:400px; padding:30px; text-align:center; box-shadow:0 24px 60px rgba(0,0,0,.25); }
+        .confirm-icon { font-size:48px; margin-bottom:16px; }
+        .confirm-title { font-size:18px; font-weight:700; color:#1a1a1a; margin-bottom:8px; }
+        .confirm-text { font-size:14px; color:#6b7280; margin-bottom:24px; }
+        .confirm-btns { display:flex; gap:10px; justify-content:center; }
+        .btn-cancel-del { background:#f3f4f6; color:#374151; border:1.5px solid #e5e7eb; padding:9px 22px; border-radius:9px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }
+        .btn-confirm-del { background:#dc2626; color:white; border:none; padding:9px 22px; border-radius:9px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="logo-section">
+        <div class="logo"><img src="{% static 'images/logo.png' %}" alt="KRES Logo"></div>
+        <div class="logo-text"><h1>KRES Admin</h1><p>Management Panel</p></div>
+    </div>
+    <nav class="nav-menu">
+        <a href="{% url 'pages:dashboard' %}" class="nav-item"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" fill="currentColor"/><rect x="14" y="3" width="7" height="7" rx="1" fill="currentColor"/><rect x="3" y="14" width="7" height="7" rx="1" fill="currentColor"/><rect x="14" y="14" width="7" height="7" rx="1" fill="currentColor"/></svg><span>Dashboard</span></a>
+        <a href="{% url 'pages:inventory' %}" class="nav-item active"><svg viewBox="0 0 24 24" fill="none"><path d="M20 7H4C2.9 7 2 7.9 2 9V19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V9C22 7.9 21.1 7 20 7Z" stroke="currentColor" stroke-width="2"/><path d="M12 7V3M8 7V5M16 7V5" stroke="currentColor" stroke-width="2"/></svg><span>Inventory</span></a>
+        <a href="{% url 'pages:orders' %}" class="nav-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 2L7 6H3L8 10L6 14L12 11L18 14L16 10L21 6H17L15 2H9Z" stroke="currentColor" stroke-width="2"/><path d="M6 14L4 22H20L18 14" stroke="currentColor" stroke-width="2"/></svg><span>Orders</span></a>
+        <a href="{% url 'pages:customers' %}" class="nav-item"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="10" r="3" stroke="currentColor" stroke-width="2"/><path d="M2 20C2 16.5 5 14 9 14C13 14 16 16.5 16 20" stroke="currentColor" stroke-width="2"/><path d="M13 20C13 17.5 15 16 17 16C19 16 22 17.5 22 20" stroke="currentColor" stroke-width="2"/></svg><span>Customers</span></a>
+        <a href="{% url 'pages:payments' %}" class="nav-item"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M2 10H22M6 14H10M6 17H8" stroke="currentColor" stroke-width="2"/></svg><span>Payments</span></a>
+        <a href="{% url 'pages:reports' %}" class="nav-item"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 2V6M16 2V6M3 10H21" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="14" r="1" fill="currentColor"/><circle cx="12" cy="14" r="1" fill="currentColor"/><circle cx="16" cy="14" r="1" fill="currentColor"/><circle cx="8" cy="18" r="1" fill="currentColor"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg><span>Reports</span></a>
+    </nav>
+    <div class="user-profile">
+        <div class="avatar">A</div>
+        <div class="user-name">Admin User</div>
+        <a href="{% url 'pages:logout' %}" onclick="return confirm('Logout?');" style="text-decoration:none;display:flex;">
+            <svg class="logout-icon" viewBox="0 0 24 24" fill="none"><path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9M16 17L21 12M21 12L16 7M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+    </div>
+</div>
+
+<div class="main-content">
+    <header class="header">
+        <div class="header-left">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <h2>Inventory</h2>
+        </div>
+        <div class="notification-icon" onclick="toggleNotifications(event)">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 21 3 24 3 24H21C21 24 18 21 18 8Z" fill="currentColor"/><path d="M14.73 21H9.27" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            {% with total=low_stock_count|add:pending_payments|add:new_customers_count %}{% if total > 0 %}<span class="notification-badge">{{ total }}</span>{% endif %}{% endwith %}
+            <div id="notificationDropdown" class="notification-dropdown">
+                <div class="notification-header">Notifications</div>
+                {% if new_customers_count > 0 %}<a href="{% url 'pages:customers' %}" style="text-decoration:none;color:inherit;"><div class="notification-item"><div class="notification-item-title">👥 New Customers</div><div class="notification-item-text">{{ new_customers_count }} new customer(s) today</div></div></a>{% endif %}
+                {% if low_stock_count > 0 %}<a href="{% url 'pages:inventory' %}" style="text-decoration:none;color:inherit;"><div class="notification-item"><div class="notification-item-title">⚠️ Low Stock Alert</div><div class="notification-item-text">{{ low_stock_count }} product(s) running low</div></div></a>{% endif %}
+                {% if pending_payments > 0 %}<a href="{% url 'pages:payments' %}" style="text-decoration:none;color:inherit;"><div class="notification-item"><div class="notification-item-title">💳 Pending Payments</div><div class="notification-item-text">{{ pending_payments }} payment(s) waiting</div></div></a>{% endif %}
+                {% with total=low_stock_count|add:pending_payments|add:new_customers_count %}
+                    <div class="notification-footer">{% if total == 0 %}No new notifications{% else %}All notifications{% endif %}</div>
+                {% endwith %}
+            </div>
+        </div>
+    </header>
+
+    <div class="page-content">
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <div class="search-wrap">
+                    <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <input type="text" id="searchInput" placeholder="Search products..." oninput="filterTable()">
+                </div>
+                <select class="filter-select" id="stockFilter" onchange="filterTable()">
+                    <option value="">All Stock</option>
+                    <option value="in">In Stock</option>
+                    <option value="low">Low Stock</option>
+                    <option value="out">Out of Stock</option>
+                </select>
+                <select class="filter-select" id="categoryFilter" onchange="filterTable()">
+                    <option value="">All Categories</option>
+                    <option value="Flowers">Flowers</option>
+                    <option value="Fillers">Fillers</option>
+                </select>
+            </div>
+            <button class="btn-add" onclick="openAddModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Product
+            </button>
+        </div>
+
+        <!-- Stock Update Bar -->
+        <div class="stock-update-bar">
+            <label>Update Stock:</label>
+            <select id="stockProductSelect" class="stock-select">
+                <option value="">— Select a product —</option>
+                {% for product in products %}
+                <option value="{{ product.product_id }}">{{ product.name }} — Current: {{ product.stock_quantity }} {{ product.unit }}</option>
+                {% endfor %}
+            </select>
+            <input type="number" id="newStockQty" class="stock-input" placeholder="New qty" min="0">
+            <button class="btn-update-stock" onclick="updateStock()">Update Stock</button>
+        </div>
+
+        <!-- Low Stock Alerts -->
+        {% if low_stock_items %}
+        <div style="margin-bottom:18px;">
+            {% for item in low_stock_items %}
+            <div style="padding:12px 16px; background:#fee2e2; border-left:4px solid #ef4444; border-radius:8px; margin-bottom:8px; display:flex; align-items:center; gap:10px; font-size:13px;">
+                <span style="font-size:18px;">⚠️</span>
+                <span><strong>{{ item.name }}</strong> is running low — only <strong>{{ item.stock_quantity }} {{ item.unit }}</strong> left in stock!</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Products Table -->
+        <div class="table-container">
+            <table id="productsTable">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                        <th>Price (₱)</th>
+                        <th>Stock</th>
+                        <th>Unit</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr data-id="{{ product.product_id }}"
+                        data-name="{{ product.name }}"
+                        data-category="{{ product.category }}"
+                        data-price="{{ product.price }}"
+                        data-stock="{{ product.stock_quantity }}"
+                        data-unit="{{ product.unit }}"
+                        data-stockstatus="{% if product.stock_quantity == 0 %}out{% elif product.is_low_stock %}low{% else %}in{% endif %}">
+                        <td style="font-weight:600;color:#1a1a1a;">{{ product.name }}</td>
+                        <td>{{ product.category|default:"—" }}</td>
+                        <td style="font-weight:700;">₱ {{ product.price|floatformat:2 }}</td>
+                        <td style="font-weight:700;">{{ product.stock_quantity }}</td>
+                        <td>{{ product.unit }}</td>
+                        <td>
+                            {% if product.stock_quantity == 0 %}
+                                <span class="stock-badge st-out">Out of Stock</span>
+                            {% elif product.is_low_stock %}
+                                <span class="stock-badge st-low">⚠️ Low Stock</span>
+                            {% else %}
+                                <span class="stock-badge st-in">✅ In Stock</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-cell">
+                                <button class="btn-edit" onclick="openEditModal(this.closest('tr'))">✏️ Edit</button>
+                                <button class="btn-delete" onclick="openDeleteConfirm('{{ product.product_id }}', '{{ product.name }}')">🗑️ Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" style="text-align:center;padding:60px;color:#9ca3af;">
+                        <div style="font-size:38px;margin-bottom:10px;">📦</div>
+                        <div style="font-size:15px;font-weight:600;margin-bottom:4px;color:#6b7280;">No products yet</div>
+                        <div style="font-size:13px;">Click "Add Product" to add your first inventory item.</div>
+                    </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Product Modal -->
+<div id="productModal" class="modal">
+    <div class="modal-shell">
+        <div class="modal-top">
+            <div><div class="modal-title" id="modalTitle">Add Product</div><div class="modal-sub" id="modalSub">Fill in product details</div></div>
+            <button class="close-btn" onclick="closeProductModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="error-banner" id="formError"></div>
+            <input type="hidden" id="editProductId">
+            <div class="form-grid">
+                <div class="field span-2">
+                    <label>Product Name *</label>
+                    <input type="text" id="pName" placeholder="e.g. Red Roses">
+                </div>
+                <div class="field">
+                    <label>Category *</label>
+                    <select id="pCategory">
+                        <option value="">— Select —</option>
+                        <option value="Flowers">Flowers</option>
+                        <option value="Fillers">Fillers</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Price (₱) *</label>
+                    <input type="number" id="pPrice" placeholder="0.00" min="0" step="0.01">
+                </div>
+                <div class="field">
+                    <label>Stock Quantity</label>
+                    <input type="number" id="pStock" placeholder="0" min="0">
+                </div>
+                <div class="field">
+                    <label>Unit</label>
+                    <input type="text" id="pUnit" placeholder="pcs" value="pcs">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-ghost" onclick="closeProductModal()">Cancel</button>
+            <button class="btn-primary" id="saveProductBtn" onclick="saveProduct()">Save Product</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div id="confirmModal" class="confirm-modal">
+    <div class="confirm-shell">
+        <div class="confirm-icon">🗑️</div>
+        <div class="confirm-title">Delete Product?</div>
+        <div class="confirm-text" id="confirmText">This action cannot be undone.</div>
+        <div class="confirm-btns">
+            <button class="btn-cancel-del" onclick="closeConfirmModal()">Cancel</button>
+            <button class="btn-confirm-del" id="confirmDeleteBtn">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Toast -->
+<div class="success-toast" id="successToast"></div>
+
+{% csrf_token %}
+
+<script>
+function getCookie(name) {
+    for (const c of document.cookie.split(';')) {
+        const t = c.trim();
+        if (t.startsWith(name + '=')) return decodeURIComponent(t.slice(name.length + 1));
+    }
+    return '';
+}
+const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value || getCookie('csrftoken');
+
+function showToast(msg, isError) {
+    const t = document.getElementById('successToast');
+    t.textContent = msg;
+    t.style.background = isError ? '#dc2626' : '#059669';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Notifications ──
+function toggleNotifications(event) {
+    event.stopPropagation();
+    document.getElementById('notificationDropdown').classList.toggle('show');
+}
+document.addEventListener('click', function(e) {
+    const icon = document.querySelector('.notification-icon');
+    if (icon && !icon.contains(e.target)) {
+        const dd = document.getElementById('notificationDropdown');
+        if (dd) dd.classList.remove('show');
+    }
+});
+
+// ── Filter ──
+function filterTable() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const sf = document.getElementById('stockFilter').value;
+    const cf = document.getElementById('categoryFilter').value.toLowerCase();
+    document.querySelectorAll('#productsTable tbody tr[data-id]').forEach(row => {
+        const name = (row.getAttribute('data-name') || '').toLowerCase();
+        const cat = (row.getAttribute('data-category') || '').toLowerCase();
+        const ss = row.getAttribute('data-stockstatus') || '';
+        const matchQ = !q || name.includes(q);
+        const matchS = !sf || ss === sf;
+        const matchC = !cf || cat === cf;
+        row.style.display = (matchQ && matchS && matchC) ? '' : 'none';
+    });
+}
+
+// ── Add Modal ──
+function openAddModal() {
+    document.getElementById('modalTitle').textContent = 'Add Product';
+    document.getElementById('modalSub').textContent = 'Fill in product details';
+    document.getElementById('editProductId').value = '';
+    document.getElementById('pName').value = '';
+    document.getElementById('pCategory').value = '';
+    document.getElementById('pPrice').value = '';
+    document.getElementById('pStock').value = '0';
+    document.getElementById('pUnit').value = 'pcs';
+    document.getElementById('formError').textContent = '';
+    document.getElementById('formError').classList.remove('show');
+    document.getElementById('saveProductBtn').textContent = 'Save Product';
+    document.getElementById('productModal').classList.add('show');
+}
+
+// ── Edit Modal ──
+function openEditModal(row) {
+    document.getElementById('modalTitle').textContent = 'Edit Product';
+    document.getElementById('modalSub').textContent = 'Update product details';
+    document.getElementById('editProductId').value = row.getAttribute('data-id');
+    document.getElementById('pName').value = row.getAttribute('data-name') || '';
+    document.getElementById('pCategory').value = row.getAttribute('data-category') || '';
+    document.getElementById('pPrice').value = row.getAttribute('data-price') || '';
+    document.getElementById('pStock').value = row.getAttribute('data-stock') || '0';
+    document.getElementById('pUnit').value = row.getAttribute('data-unit') || 'pcs';
+    document.getElementById('formError').textContent = '';
+    document.getElementById('formError').classList.remove('show');
+    document.getElementById('saveProductBtn').textContent = 'Update Product';
+    document.getElementById('productModal').classList.add('show');
+}
+
+function closeProductModal() {
+    document.getElementById('productModal').classList.remove('show');
+}
+
+// ── Save Product (Create or Edit) ──
+function saveProduct() {
+    const productId = document.getElementById('editProductId').value;
+    const name = document.getElementById('pName').value.trim();
+    const category = document.getElementById('pCategory').value;
+    const price = document.getElementById('pPrice').value;
+    const errEl = document.getElementById('formError');
+
+    if (!name) { errEl.textContent = 'Product name is required.'; errEl.classList.add('show'); return; }
+    if (!category) { errEl.textContent = 'Please select a category.'; errEl.classList.add('show'); return; }
+    if (!price) { errEl.textContent = 'Price is required.'; errEl.classList.add('show'); return; }
+    errEl.classList.remove('show');
+
+    // Auto-generate SKU from name
+    const autoSku = (category.substring(0,3) + '-' + name.replace(/\s+/g,'-').toUpperCase()).substring(0,30) + '-' + Date.now().toString().slice(-4);
+
+    const payload = {
+        name,
+        sku: productId ? undefined : autoSku,
+        category,
+        price: parseFloat(price) || 0,
+        stock_quantity: parseInt(document.getElementById('pStock').value) || 0,
+        low_stock_threshold: 5,
+        unit: document.getElementById('pUnit').value.trim() || 'pcs',
+    };
+    if (productId) {
+        payload.product_id = productId;
+        delete payload.sku; // don't overwrite SKU on edit
+    }
+
+    const url = productId ? '/ajax/product/edit/' : '/ajax/product/create/';
+
+    const btn = document.getElementById('saveProductBtn');
+    btn.textContent = 'Saving...';
+    btn.disabled = true;
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.textContent = productId ? 'Update Product' : 'Save Product';
+        if (data.success) {
+            closeProductModal();
+            showToast(data.message);
+            setTimeout(() => location.reload(), 1200);
+        } else {
+            errEl.textContent = data.message || 'An error occurred.';
+            errEl.classList.add('show');
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.textContent = productId ? 'Update Product' : 'Save Product';
+        errEl.textContent = 'Server error: ' + err.message;
+        errEl.classList.add('show');
+    });
+}
+
+// ── Delete Confirm ──
+let _deleteId = null;
+function openDeleteConfirm(id, name) {
+    _deleteId = id;
+    document.getElementById('confirmText').textContent = `Delete "${name}"? This cannot be undone.`;
+    document.getElementById('confirmModal').classList.add('show');
+    document.getElementById('confirmDeleteBtn').onclick = function() {
+        this.textContent = 'Deleting...';
+        this.disabled = true;
+        fetch('/ajax/product/delete/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify({ product_id: _deleteId })
+        })
+        .then(r => r.json())
+        .then(data => {
+            this.textContent = 'Delete';
+            this.disabled = false;
+            closeConfirmModal();
+            if (data.success) {
+                showToast(data.message);
+                setTimeout(() => location.reload(), 1200);
+            } else {
+                showToast(data.message || 'Delete failed.', true);
+            }
+        })
+        .catch(() => { this.textContent = 'Delete'; this.disabled = false; closeConfirmModal(); });
+    };
+}
+
+function closeConfirmModal() {
+    document.getElementById('confirmModal').classList.remove('show');
+    _deleteId = null;
+}
+
+// ── Update Stock ──
+function updateStock() {
+    const productId = document.getElementById('stockProductSelect').value;
+    const qty = document.getElementById('newStockQty').value;
+    if (!productId) { showToast('Please select a product.', true); return; }
+    if (qty === '' || qty < 0) { showToast('Please enter a valid quantity.', true); return; }
+
+    fetch('/ajax/product/update-stock/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify({ product_id: productId, stock_quantity: parseInt(qty) })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message);
+            setTimeout(() => location.reload(), 1200);
+        } else {
+            showToast(data.message || 'Update failed.', true);
+        }
+    })
+    .catch(err => showToast('Server error: ' + err.message, true));
+}
+
+// Close modals on backdrop click
+window.addEventListener('click', function(e) {
+    if (e.target === document.getElementById('productModal')) closeProductModal();
+    if (e.target === document.getElementById('confirmModal')) closeConfirmModal();
+});
+
+// Apply filter from sessionStorage (from dashboard low stock link)
+document.addEventListener('DOMContentLoaded', function() {
+    const filter = sessionStorage.getItem('inventoryFilter');
+    if (filter === 'lowstock') {
+        document.getElementById('stockFilter').value = 'low';
+        filterTable();
+        sessionStorage.removeItem('inventoryFilter');
+    }
+});
+</script>
+</body>
+</html>

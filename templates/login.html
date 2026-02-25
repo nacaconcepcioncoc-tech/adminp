@@ -1,0 +1,319 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KRES Admin - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #e8eaed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            display: flex;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 1000px;
+            width: 90%;
+        }
+
+        .login-left {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px 40px 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-width: 40%;
+        }
+
+       .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 180px; 
+            height: 180px;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            overflow: hidden; 
+        }
+
+        .logo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transform: scale(1.4); 
+            padding: 0;
+            background: white;
+        }
+
+        .login-left h1 {            font-family: 'Times New Roman', Times, serif; font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .login-left p {
+            font-size: 16px;
+            color: #bdc3c7;
+            text-align: center;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        .login-right {
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 60%;
+        }
+
+        .login-header {
+            margin-bottom: 40px;
+        }
+
+        .login-header h2 {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            background-color: #f5f6f7;
+            font-size: 14px;
+            color: #2c3e50;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            background-color: #eff1f3;
+            box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #95a5a6;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            font-size: 13px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #2c3e50;
+        }
+
+        .remember-me label {
+            color: #2c3e50;
+            font-weight: 500;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .forgot-password {
+            color: #2c3e50;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-password:hover {
+            color: #34495e;
+            text-decoration: underline;
+        }
+
+        .login-btn {
+            width: 80%;
+            padding: 14px;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(44, 62, 80, 0.3);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+            }
+
+            .login-left {
+                min-width: 100%;
+                padding: 40px 30px;
+            }
+
+            .login-right {
+                min-width: 100%;
+                padding: 40px 30px;
+            }
+
+            .login-left h1 {
+                font-size: 28px;
+            }
+
+            .login-header h2 {
+                font-size: 24px;
+            }
+
+            .logo-container {
+                width: 180px;
+                height: 180px;
+                margin-bottom: 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                border-radius: 12px;
+                width: 95%;
+            }
+
+            .login-left {
+                padding: 30px 20px;
+            }
+
+            .login-right {
+                padding: 30px 20px;
+            }
+
+            .login-left h1 {
+                font-size: 24px;
+                letter-spacing: 1px;
+            }
+
+            .login-header h2 {
+                font-size: 20px;
+            }
+
+            .form-options {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <!-- Left Section -->
+        <div class="login-left">
+            <div class="logo-container">
+                <img src="{% static 'images/logo.png' %}" alt="KRES Logo">
+            </div>
+            <h1>KRES PRESENTS</h1>
+            <p>Track your orders, manage customers, and monitor sales in one place.</p>
+        </div>
+
+        <!-- Right Section -->
+        <div class="login-right">
+            <div class="login-header">
+                <h2>Welcome Back</h2>
+                <p>Login to your admin portal</p>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                
+                {% if messages %}
+                    <div style="margin-bottom: 20px;">
+                        {% for message in messages %}
+                            <div style="padding: 12px; background-color: #fee2e2; color: #dc2626; border-radius: 6px; border-left: 4px solid #dc2626;">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <div class="form-group">
+                    <label for="email">Email or Username</label>
+                    <input type="text" id="email" name="email" placeholder="kres_admin" required autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+
+                <div class="form-options">
+                    <div class="remember-me">
+                        <input type="checkbox" id="remember" name="remember">
+                        <label for="remember">Remember Me</label>
+                    </div>
+                    <a href="#" class="forgot-password">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="login-btn">Login to Dashboard</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
